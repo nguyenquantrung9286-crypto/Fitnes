@@ -1,7 +1,8 @@
 {
   "expo": {
     "name": "FitnesApp",
-    "slug": "FitnesApp",
+    "slug": "fitnes",
+    "scheme": "fitnes",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -25,7 +26,11 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -47,6 +52,13 @@
           "cameraPermission": "Необходим доступ к камере для сканирования блюд."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "da0176df-3860-4db6-9310-9aaac392a9fa"
+      }
+    },
+    "owner": "dan1ls-organization"
   }
 }

@@ -64,7 +64,7 @@ function StackScreen() {
         }}
       />
       <Stack.Screen
-        name="workouts"
+        name="workouts/[id]"
         options={{
           headerShown: false,
           presentation: "modal",

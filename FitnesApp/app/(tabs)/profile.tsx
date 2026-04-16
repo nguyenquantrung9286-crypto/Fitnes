@@ -8,14 +8,14 @@ import { ActivityIndicator } from "react-native";
 import { useProgressEntries, useCreateProgressEntry, useLatestProgress } from "@/services/api";
 import { LineChart } from "react-native-chart-kit";
 import { useState } from "react";
-import { useColorScheme } from "nativewind";
+import { useColorScheme as useNativeWindColorScheme } from "nativewind";
 
 export default function ProfileScreen() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [isAddingWeight, setIsAddingWeight] = useState(false);
   const [newWeight, setNewWeight] = useState("");
-  const { colorScheme, setColorScheme } = useColorScheme();
+  const { colorScheme, setColorScheme } = useNativeWindColorScheme();
   const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark' | 'system'>('system');
 
   const { data: progressEntries, isLoading: isLoadingProgress } = useProgressEntries();
