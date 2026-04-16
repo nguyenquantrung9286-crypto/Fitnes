@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "FitnesApp",
+    "slug": "FitnesApp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSHealthShareUsageDescription": "Мы используем данные о шагах для расчета вашей дневной активности и персонализации тренировок.",
+        "NSHealthUpdateUsageDescription": "Мы сохраняем данные об активности для отслеживания вашего прогресса."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-video",
+      [
+        "react-native-health",
+        {
+          "healthSharePermission": "Хотим считывать данные о шагах для отслеживания активности",
+          "healthUpdatePermission": "Хотим обновлять данные о шагах"
+        }
+      ],
+      "expo-notifications",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Необходим доступ к камере для сканирования блюд."
+        }
+      ]
+    ]
+  }
+}

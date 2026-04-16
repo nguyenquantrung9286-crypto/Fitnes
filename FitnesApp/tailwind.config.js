@@ -1,0 +1,65 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./app/**/*.{js,jsx,ts,tsx}",
+    "./src/**/*.{js,jsx,ts,tsx}",
+  ],
+  presets: [require("nativewind/preset")],
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          DEFAULT: "#7C3AED",
+          50: "#F5F3FF",
+          100: "#EDE9FE",
+          200: "#DDD6FE",
+          300: "#C4B5FD",
+          400: "#A78BFA",
+          500: "#8B5CF6",
+          600: "#7C3AED",
+          700: "#6D28D9",
+          800: "#5B21B6",
+          900: "#4C1D95",
+        },
+        accent: {
+          DEFAULT: "#EC4899",
+          50: "#FDF2F8",
+          100: "#FCE7F3",
+          200: "#FBCFE8",
+          300: "#F9A8D4",
+          400: "#F472B6",
+          500: "#EC4899",
+          600: "#DB2777",
+          700: "#BE185D",
+          800: "#9D174D",
+          900: "#831843",
+        },
+        dark: {
+          DEFAULT: "#1A1A2E",
+          50: "#E5E5EA",
+          100: "#C8C8D1",
+          200: "#A1A1AA",
+          300: "#71717A",
+          400: "#52525B",
+          500: "#3F3F46",
+          600: "#27272A",
+          700: "#18181B",
+          800: "#0F0F1A",
+          900: "#0A0A14",
+          950: "#050509",
+        },
+      },
+      fontFamily: {
+        sans: ["Inter", "System"],
+      },
+      height: {
+        button: "52",
+      },
+      minHeight: {
+        button: "52",
+      },
+    },
+  },
+  plugins: [],
+};

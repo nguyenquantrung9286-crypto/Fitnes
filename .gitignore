@@ -1,0 +1,37 @@
+# macOS
+.DS_Store
+
+# Agent folders
+.agent/
+.gemini/
+
+# App related ignores (FitnesApp)
+FitnesApp/node_modules/
+FitnesApp/.expo/
+FitnesApp/dist/
+FitnesApp/web-build/
+FitnesApp/expo-env.d.ts
+FitnesApp/.kotlin/
+FitnesApp/*.orig.*
+FitnesApp/*.jks
+FitnesApp/*.p8
+FitnesApp/*.p12
+FitnesApp/*.key
+FitnesApp/*.mobileprovision
+FitnesApp/.metro-health-check*
+FitnesApp/npm-debug.*
+FitnesApp/yarn-debug.*
+FitnesApp/yarn-error.*
+FitnesApp/*.tsbuildinfo
+FitnesApp/ios/
+FitnesApp/android/
+
+# Environment files
+FitnesApp/.env*.local
+FitnesApp/.env
+.env
+.env*.local
+
+# Other
+*.pem
+*.log
