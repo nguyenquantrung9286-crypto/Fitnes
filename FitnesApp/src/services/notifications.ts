@@ -56,7 +56,10 @@ export async function scheduleWorkoutReminder(workoutName: string, date: Date) {
       body: `Твоя тренировка "${workoutName}" начнется через 30 минут. Готов?`,
       data: { screen: "/(tabs)/workouts" },
     },
-    trigger: trigger as any,
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: trigger,
+    },
   });
 }
 

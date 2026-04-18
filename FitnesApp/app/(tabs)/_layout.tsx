@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Home, Dumbbell, Camera, User } from "lucide-react-native";
+import { Home, Dumbbell, Camera, User, MessageSquare } from "lucide-react-native";
 
 export default function TabsLayout() {
   return (
@@ -42,6 +42,13 @@ export default function TabsLayout() {
         options={{
           title: "Сканер",
           tabBarIcon: ({ color, size }) => <Camera color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: "Тренер",
+          tabBarIcon: ({ color, size }) => <MessageSquare color={color} size={size} />,
         }}
       />
       <Tabs.Screen

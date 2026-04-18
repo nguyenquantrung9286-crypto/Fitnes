@@ -17,23 +17,24 @@ export default function WorkoutDetailScreen() {
   const exercises = workout?.exercises || [];
   const exercise = exercises[currentExerciseIdx];
 
-  const player = useVideoPlayer(exercise?.video_url || "", (player) => {
+  const videoSource = exercise?.video_url || null;
+  const player = useVideoPlayer(videoSource, (player) => {
     player.loop = true;
-    if (exercise?.video_url) {
+    if (videoSource) {
       player.play();
     }
   });
 
   useEffect(() => {
-    if (exercise?.video_url) {
-      player.replace(exercise.video_url);
+    if (videoSource) {
+      player.replace(videoSource);
       player.play();
     }
-  }, [exercise?.video_url, player]);
+  }, [videoSource]);
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
+      <View className="flex-1 items-center justify-center bg-gray-50 dark:bg-dark-950">
         <ActivityIndicator size="large" color="#7C3AED" />
       </View>
     );
@@ -41,7 +42,7 @@ export default function WorkoutDetailScreen() {
 
   if (error || !workout) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50 px-6">
+      <View className="flex-1 items-center justify-center bg-gray-50 dark:bg-dark-950 px-6">
         <Text className="text-center text-lg text-red-500">Ошибка загрузки тренировки</Text>
         <CustomButton
           title="Вернуться назад"
@@ -66,20 +67,20 @@ export default function WorkoutDetailScreen() {
   };
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-50 dark:bg-dark-950">
       {/* Header */}
-      <View className="flex-row items-center bg-white px-4 pt-14 pb-4 shadow-sm">
+      <View className="flex-row items-center bg-white dark:bg-dark-900 px-4 pt-14 pb-4 shadow-sm">
         <TouchableOpacity
           onPress={() => router.back()}
-          className="mr-3 rounded-full bg-gray-100 p-2"
+          className="mr-3 rounded-full bg-gray-100 dark:bg-dark-800 p-2"
         >
           <ChevronLeft size={24} color="#374151" />
         </TouchableOpacity>
         <View className="flex-1">
-          <Text className="text-xl font-bold text-gray-900" numberOfLines={1}>
+          <Text className="text-xl font-bold text-gray-900 dark:text-gray-50" numberOfLines={1}>
             {workout.name}
           </Text>
-          <Text className="text-sm text-gray-500">
+          <Text className="text-sm text-gray-500 dark:text-gray-400">
             Упражнение {currentExerciseIdx + 1} из {exercises.length}
           </Text>
         </View>
@@ -107,11 +108,11 @@ export default function WorkoutDetailScreen() {
         {/* Exercise info */}
         {exercise && (
           <Card variant="elevated" padding="lg" style={{ marginTop: 12 }}>
-            <Text className="text-2xl font-bold text-gray-900">
+            <Text className="text-2xl font-bold text-gray-900 dark:text-gray-50">
               {exercise.name}
             </Text>
             {exercise.description && (
-              <Text className="mt-3 text-base text-gray-600">
+              <Text className="mt-3 text-base text-gray-600 dark:text-gray-400">
                 {exercise.description}
               </Text>
             )}
@@ -163,9 +164,9 @@ export default function WorkoutDetailScreen() {
 
 function StatBox({ label, value }: { label: string; value: string }) {
   return (
-    <View className="flex-1 items-center rounded-xl bg-gray-50 p-3">
+    <View className="flex-1 items-center rounded-xl bg-gray-50 dark:bg-dark-800 p-3">
       <Text className="text-xl font-bold text-primary-600">{value}</Text>
-      <Text className="mt-1 text-xs text-gray-500">{label}</Text>
+      <Text className="mt-1 text-xs text-gray-500 dark:text-gray-400">{label}</Text>
     </View>
   );
 }

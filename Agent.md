@@ -37,14 +37,13 @@ This is a comprehensive mobile health platform project ("Единая цифро
 Fitnes/
 ├── specification.md          # Product specification (features, UI/UX, tech stack)
 ├── step.md                   # Development plan (7 stages, step-by-step)
-├── QWEN.md                   # This file
-└── .qwen/
-    ├── settings.json         # MCP servers config (shadcn, supabase, postgres, fetch)
+├── Agent.md                  # This file
+└── .agent/
+    ├── settings.json         # MCP servers config (shadcn, postgres, fetch)
     └── skills/
         ├── mobile-assistant/ # Expo/React Native mobile development skill
         ├── native/           # Native development skill
         ├── react-native-expo/# React Native Expo SDK 52+ skill
-        └── supbase/          # Supabase database management skill
 ```
 
 ## Development Plan
@@ -121,7 +120,8 @@ npx supabase db push --linked --yes
 npx supabase db dump --linked --schema public
 
 # Generate types
-bun db:types
+export SUPABASE_PROJECT_ID=asihntqqeipaxsdilkyv
+npx supabase gen types typescript --project-id "$SUPABASE_PROJECT_ID" > src/types/supabase.ts
 ```
 
 ### EAS Build
@@ -137,7 +137,7 @@ eas build -p ios --profile preview
 - **Supabase Project:** `asihntqqeipaxsdilkyv`
 - **Organization:** HemSoft (Free tier)
 - **Region:** East US (North Virginia)
-- **Connection:** Available via MCP postgres server (configured in `.qwen/settings.json`)
+- **Connection:** Available via MCP postgres server (configured in `.agent/settings.json`)
 
 ## UI/UX Design Principles
 
@@ -155,7 +155,6 @@ eas build -p ios --profile preview
 | Server | Purpose |
 |--------|---------|
 | `shadcn` | shadcn/ui components |
-| `supabase` | Supabase project management |
 | `postgres` | Direct PostgreSQL database access |
 | `fetch` | Web fetching for research |
 
@@ -173,14 +172,13 @@ supabase/migrations/000{XX}_{description}.sql
 
 ## Available Skills
 
-The project has specialized skills in `.qwen/skills/` for:
+The project has specialized skills in `.agent/skills/` for:
 - **mobile-assistant** — Expo/React Native mobile development
 - **react-native-expo** — React Native Expo SDK 52+ specifics
-- **supbase** — Supabase database management
 - **native** — Native development
 
 ## Notes
 
-- The project is currently in **pre-initialization** state (no Expo project created yet)
+- The project is currently in **active development** (Stage 7: UI Polish & Dark Mode)
 - Development should follow the step-by-step plan in `step.md`
 - All responses should be in **Russian** (language preference configured)

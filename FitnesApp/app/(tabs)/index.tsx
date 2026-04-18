@@ -19,6 +19,7 @@ export default function HomeScreen() {
   const { data: nutritionLogs } = useTodayNutrition();
   const { data: settings } = useUserSettings();
   const [steps, setSteps] = useState(0);
+  const [waterMl, setWaterMl] = useState(0);
 
   useEffect(() => {
     // Initial fetch
@@ -43,8 +44,6 @@ export default function HomeScreen() {
 
     return () => subscription.remove();
   }, []);
-
-  // Calculate nutrition totals
 
   // Calculate nutrition totals
   const totalCalories = nutritionLogs?.reduce((sum, log) => sum + (log.calories ?? 0), 0) ?? 0;
@@ -88,18 +87,23 @@ export default function HomeScreen() {
           Сегодня
         </Text>
         <View className="flex-row gap-4">
-          {/* Water */}
           <Card variant="elevated" padding="md" className="flex-1">
-            <View className="bg-blue-50 dark:bg-blue-900/20 self-start p-2 rounded-xl mb-2">
-              <Droplets size={24} color="#3B82F6" />
-            </View>
-            <Text className="text-base font-bold text-gray-900 dark:text-gray-50">
-              Вода
-            </Text>
-            <Text className="text-xs text-gray-500 dark:text-gray-400 font-medium">0 / {waterGoal} мл</Text>
-            <View className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-dark-700">
-              <View className="h-full w-[0%] rounded-full bg-blue-500" />
-            </View>
+            <TouchableOpacity onPress={() => setWaterMl(prev => Math.min(prev + 250, waterGoal + 1000))}>
+              <View className="bg-blue-50 dark:bg-blue-900/20 self-start p-2 rounded-xl mb-2">
+                <Droplets size={24} color="#3B82F6" />
+              </View>
+              <Text className="text-base font-bold text-gray-900 dark:text-gray-50">
+                Вода
+              </Text>
+              <Text className="text-xs text-gray-500 dark:text-gray-400 font-medium">{waterMl} / {waterGoal} мл</Text>
+              <View className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-dark-700">
+                <View 
+                  className="h-full rounded-full bg-blue-500" 
+                  style={{ width: `${Math.min((waterMl / waterGoal) * 100, 100)}%` }}
+                />
+              </View>
+              <Text className="text-[10px] text-blue-500 dark:text-blue-400 mt-1 font-bold">+250 мл</Text>
+            </TouchableOpacity>
           </Card>
 
           {/* Steps */}
@@ -184,7 +188,7 @@ export default function HomeScreen() {
               </View>
               <CustomButton
                 title="Настроить программу"
-                onPress={() => router.push("/workouts")}
+                onPress={() => router.push("/(tabs)/workouts")}
                 variant="outline"
                 size="md"
                 className="mt-5"

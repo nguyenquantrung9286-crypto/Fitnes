@@ -37,8 +37,11 @@ export default function RegisterScreen() {
         password,
         settings,
       });
-      Alert.alert("Успех", "Аккаунт создан! Теперь войдите.");
-      router.replace("/(tabs)");
+      Alert.alert(
+        "Проверьте почту",
+        "Мы отправили письмо для подтверждения. После подтверждения войдите в аккаунт.",
+        [{ text: "Ок", onPress: () => router.replace("/auth/login") }]
+      );
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Ошибка регистрации";
@@ -50,7 +53,7 @@ export default function RegisterScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-gray-50"
+      className="flex-1 bg-gray-50 dark:bg-dark-950"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
@@ -58,10 +61,10 @@ export default function RegisterScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
-        <Text className="mb-2 text-3xl font-bold text-gray-900">
+        <Text className="mb-2 text-3xl font-bold text-gray-900 dark:text-gray-50">
           Регистрация
         </Text>
-        <Text className="mb-8 text-base text-gray-500">
+        <Text className="mb-8 text-base text-gray-500 dark:text-gray-400">
           Создайте аккаунт для сохранения прогресса
         </Text>
 

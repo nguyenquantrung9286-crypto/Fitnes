@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Workout, Exercise, NutritionLog, ProgressEntry } from "@/types";
+import * as FileSystem from "expo-file-system";
+import { decode } from "base64-arraybuffer";
 
 // ============================================================
 // WORKOUTS
@@ -149,32 +151,46 @@ export function useAnalyzeFood() {
 
       // 1. Upload photo to storage
       const filename = `${user.id}/${Date.now()}.jpg`;
+      const uploadPath = filename; // Store path for cleanup
       
-      // Convert URI to Blob (Note: This might need adjustment for native)
-      const response = await fetch(uri);
-      const blob = await response.blob();
+      // Convert URI to ArrayBuffer for reliability on mobile
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      const arrayBuffer = decode(base64);
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("food-scans")
-        .upload(filename, blob, { contentType: 'image/jpeg' });
+        .upload(filename, arrayBuffer, { 
+          contentType: 'image/jpeg',
+          upsert: false 
+        });
 
       if (uploadError) throw uploadError;
 
-      // 2. Get public URL
-      const { data: { publicUrl } } = supabase.storage
+      // 2. Get signed URL (Edge Function needs access)
+      const { data: signedData, error: signedError } = await supabase.storage
         .from("food-scans")
-        .getPublicUrl(uploadData.path);
+        .createSignedUrl(uploadData.path, 3600);
+
+      if (signedError) throw signedError;
+      const imageUrl = signedData.signedUrl;
 
       // 3. Call Edge Function
       const { data, error } = await supabase.functions.invoke("analyze-food-vision", {
-        body: { image_url: publicUrl },
+        body: { image_url: imageUrl },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Cleanup on function error
+        await supabase.storage.from("food-scans").remove([uploadPath]);
+        throw error;
+      }
 
       return {
         ...data,
-        photo_url: publicUrl
+        photo_url: imageUrl,
+        storage_path: uploadPath
       };
     },
   });

@@ -32,7 +32,7 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-gray-50"
+      className="flex-1 bg-gray-50 dark:bg-dark-950"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
@@ -40,8 +40,8 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
-        <Text className="mb-2 text-3xl font-bold text-gray-900">Вход</Text>
-        <Text className="mb-8 text-base text-gray-500">
+        <Text className="mb-2 text-3xl font-bold text-gray-900 dark:text-gray-50">Вход</Text>
+        <Text className="mb-8 text-base text-gray-500 dark:text-gray-400">
           Войдите, чтобы продолжить работу с вашим профилем
         </Text>
 
@@ -88,13 +88,6 @@ export default function LoginScreen() {
             size="lg"
           />
 
-          <CustomButton
-            title="Пропустить"
-            onPress={() => router.replace("/(tabs)")}
-            variant="ghost"
-            size="md"
-            style={{ marginTop: 8 }}
-          />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

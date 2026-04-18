@@ -64,7 +64,13 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const calculateDailyCalories = () => {
     const weight = settings.weight_kg ?? 70;
     const height = settings.height_cm ?? 170;
-    const age = 30; // Default, could be calculated from birth_date
+    
+    // Calculate real age from birth_date
+    const birthDate = settings.birth_date ? new Date(settings.birth_date) : null;
+    const age = birthDate
+      ? Math.max(13, Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 86400 * 1000)))
+      : 30;
+
     const isMale = settings.gender === "male";
 
     // Mifflin-St Jeor equation

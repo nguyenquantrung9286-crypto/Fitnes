@@ -24,13 +24,13 @@ export async function signUpWithEmail({
   if (settings) {
     const { error: settingsError } = await supabase
       .from("profiles")
-      .update({
-        onboarding_data: settings,
-      })
-      .eq("id", data.user.id);
+      .upsert(
+        { id: data.user.id, onboarding_data: settings },
+        { onConflict: "id" }
+      );
 
     if (settingsError) {
-      console.error("Error saving user settings:", settingsError);
+      throw settingsError;
     }
   }
 

@@ -2,25 +2,17 @@ import { useEffect } from "react";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { View, ActivityIndicator } from "react-native";
-import { useColorScheme } from "nativewind";
 
 const ONBOARDING_KEY = "fitnes_onboarding_completed";
 
 export default function RedirectScreen() {
   const router = useRouter();
-  const { colorScheme } = useColorScheme();
 
   useEffect(() => {
-    async function checkAndRedirect() {
+    (async () => {
       const completed = await AsyncStorage.getItem(ONBOARDING_KEY);
-      if (completed === "true") {
-        router.replace("/(tabs)");
-      } else {
-        router.replace("/welcome");
-      }
-    }
-    // Tiny delay to ensure router stability
-    setTimeout(() => checkAndRedirect(), 150);
+      router.replace(completed === "true" ? "/(tabs)" : "/welcome");
+    })();
   }, [router]);
 
   return (

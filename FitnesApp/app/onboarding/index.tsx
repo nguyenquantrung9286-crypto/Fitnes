@@ -79,6 +79,21 @@ function StepBasicInfo() {
           value={settings.weight_kg?.toString() ?? ""}
           onChangeText={(v) => setSetting("weight_kg", parseFloat(v) || 0)}
         />
+
+        <CustomInput
+          label="Год рождения"
+          placeholder="1995"
+          keyboardType="number-pad"
+          value={settings.birth_date ? new Date(settings.birth_date).getFullYear().toString() : ""}
+          onChangeText={(v) => {
+            const year = parseInt(v);
+            if (year > 1900 && year <= new Date().getFullYear()) {
+              const d = new Date();
+              d.setFullYear(year, 0, 1);
+              setSetting("birth_date", d.toISOString());
+            }
+          }}
+        />
       </View>
     </View>
   );
@@ -499,11 +514,11 @@ function StepNutrition() {
 function StepSummary() {
   const { settings, calculateBMI, calculateDailyCalories } = useOnboarding();
 
-  // Auto-calculate on mount
+  // Auto-calculate on mount or when key data changes
   useEffect(() => {
     calculateBMI();
     calculateDailyCalories();
-  }, []);
+  }, [settings.height_cm, settings.weight_kg, settings.gender, settings.activity_level, settings.goal, settings.birth_date]);
 
   return (
     <View className="gap-6">

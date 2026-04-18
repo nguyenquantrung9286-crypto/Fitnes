@@ -16,7 +16,9 @@ export default function ProfileScreen() {
   const [isAddingWeight, setIsAddingWeight] = useState(false);
   const [newWeight, setNewWeight] = useState("");
   const { colorScheme, setColorScheme } = useNativeWindColorScheme();
-  const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark' | 'system'>('system');
+  const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark' | 'system'>(
+    () => (colorScheme as 'light' | 'dark') ?? 'system'
+  );
 
   const { data: progressEntries, isLoading: isLoadingProgress } = useProgressEntries();
   const { data: latestProgress } = useLatestProgress();
