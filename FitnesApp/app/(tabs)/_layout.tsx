@@ -1,23 +1,28 @@
 import { Tabs } from "expo-router";
 import { Home, Dumbbell, Camera, User, MessageSquare } from "lucide-react-native";
+import { useAppTheme } from "@/context/theme-context";
 
 export default function TabsLayout() {
+  const { resolvedTheme } = useAppTheme();
+  const isDark = resolvedTheme === "dark";
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#7C3AED",
-        tabBarInactiveTintColor: "#9CA3AF",
+        tabBarActiveTintColor: "#2B8EF0",
+        tabBarInactiveTintColor: isDark ? "#44445A" : "#9090B0",
         tabBarStyle: {
           borderTopWidth: 1,
-          borderTopColor: "#E5E7EB",
+          borderTopColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+          backgroundColor: isDark ? "#101018" : "#FFFFFF",
           height: 60,
           paddingBottom: 8,
           paddingTop: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: "600",
+          fontSize: 11,
+          fontFamily: "Manrope-SemiBold",
         },
       }}
     >
@@ -32,9 +37,7 @@ export default function TabsLayout() {
         name="workouts"
         options={{
           title: "Тренировки",
-          tabBarIcon: ({ color, size }) => (
-            <Dumbbell color={color} size={size} />
-          ),
+          tabBarIcon: ({ color, size }) => <Dumbbell color={color} size={size} />,
         }}
       />
       <Tabs.Screen
