@@ -25,7 +25,7 @@ import { isOnboardingCompleted } from "@/services/auth";
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     "Manrope-Regular":   Manrope_400Regular,
     "Manrope-Medium":    Manrope_500Medium,
     "Manrope-SemiBold":  Manrope_600SemiBold,
@@ -35,8 +35,8 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded) SplashScreen.hideAsync();
-  }, [fontsLoaded]);
+    if (fontsLoaded || fontError) SplashScreen.hideAsync();
+  }, [fontsLoaded, fontError]);
 
   useEffect(() => {
     async function setupNotifications() {
@@ -52,7 +52,7 @@ export default function RootLayout() {
     setupNotifications();
   }, []);
 
-  if (!fontsLoaded) return null;
+  if (!fontsLoaded && !fontError) return null;
 
   return (
     <SafeAreaProvider>
@@ -188,8 +188,8 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (loading || routeLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#000" }}>
-        <ActivityIndicator size="large" color="#4ADE80" />
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#0C0C16" }}>
+        <ActivityIndicator size="large" color="#2B8EF0" />
       </View>
     );
   }
