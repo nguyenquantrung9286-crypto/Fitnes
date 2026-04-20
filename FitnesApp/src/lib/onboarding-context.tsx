@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useState, ReactNode } from "react";
 import { UserSettings } from "@/types";
 
 type OnboardingContextType = {
@@ -52,65 +52,65 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const calculateBMI = () => {
-    const heightM = (settings.height_cm ?? 0) / 100;
-    const weight = settings.weight_kg ?? 0;
-    if (heightM > 0 && weight > 0) {
-      const bmi = weight / (heightM * heightM);
-      setSettings((prev) => ({ ...prev, bmi: Math.round(bmi * 10) / 10 }));
-    }
-  };
+  // Читаем данные через `prev` в functional-updater, поэтому deps — [].
+  // Стабильная ссылка не вызывает бесконечный цикл в useEffect StepSummary.
+  const calculateBMI = useCallback(() => {
+    setSettings((prev) => {
+      const heightM = (prev.height_cm ?? 0) / 100;
+      const weight = prev.weight_kg ?? 0;
+      if (heightM > 0 && weight > 0) {
+        const bmi = Math.round((weight / (heightM * heightM)) * 10) / 10;
+        return { ...prev, bmi };
+      }
+      return prev;
+    });
+  }, []);
 
-  const calculateDailyCalories = () => {
-    const weight = settings.weight_kg ?? 70;
-    const height = settings.height_cm ?? 170;
-    
-    // Calculate real age from birth_date
-    const birthDate = settings.birth_date ? new Date(settings.birth_date) : null;
-    const age = birthDate
-      ? Math.max(13, Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 86400 * 1000)))
-      : 30;
+  const calculateDailyCalories = useCallback(() => {
+    setSettings((prev) => {
+      const weight = prev.weight_kg ?? 70;
+      const height = prev.height_cm ?? 170;
 
-    const isMale = settings.gender === "male";
+      // Реальный возраст из birth_date
+      const birthDate = prev.birth_date ? new Date(prev.birth_date) : null;
+      const age = birthDate
+        ? Math.max(13, Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 86400 * 1000)))
+        : 30;
 
-    // Mifflin-St Jeor equation
-    let bmr = 10 * weight + 6.25 * height - 5 * age;
-    bmr += isMale ? 5 : -161;
+      const isMale = prev.gender === "male";
 
-    const activityMultipliers: Record<string, number> = {
-      sedentary: 1.2,
-      light: 1.375,
-      moderate: 1.55,
-      active: 1.725,
-      very_active: 1.9,
-    };
+      // Уравнение Миффлина–Сан Жеора
+      let bmr = 10 * weight + 6.25 * height - 5 * age;
+      bmr += isMale ? 5 : -161;
 
-    const multiplier =
-      activityMultipliers[settings.activity_level ?? "moderate"] ?? 1.55;
+      const activityMultipliers: Record<string, number> = {
+        sedentary: 1.2,
+        light: 1.375,
+        moderate: 1.55,
+        active: 1.725,
+        very_active: 1.9,
+      };
+      const multiplier = activityMultipliers[prev.activity_level ?? "moderate"] ?? 1.55;
+      const tdee = Math.round(bmr * multiplier);
 
-    const tdee = Math.round(bmr * multiplier);
+      let targetCalories = tdee;
+      if (prev.goal === "weight_loss") targetCalories = tdee - 500;
+      else if (prev.goal === "muscle_gain") targetCalories = tdee + 300;
 
-    // Adjust based on goal
-    let targetCalories = tdee;
-    if (settings.goal === "weight_loss") {
-      targetCalories = tdee - 500;
-    } else if (settings.goal === "muscle_gain") {
-      targetCalories = tdee + 300;
-    }
+      // Распределение макросов: 30% белки, 25% жиры, 45% углеводы
+      const proteinG = Math.round((targetCalories * 0.3) / 4);
+      const fatG = Math.round((targetCalories * 0.25) / 9);
+      const carbsG = Math.round((targetCalories * 0.45) / 4);
 
-    // Macro split: 30% protein, 25% fat, 45% carbs
-    const proteinG = Math.round((targetCalories * 0.3) / 4);
-    const fatG = Math.round((targetCalories * 0.25) / 9);
-    const carbsG = Math.round((targetCalories * 0.45) / 4);
-
-    setSettings((prev) => ({
-      ...prev,
-      daily_calories: targetCalories,
-      daily_protein_g: proteinG,
-      daily_fat_g: fatG,
-      daily_carbs_g: carbsG,
-    }));
-  };
+      return {
+        ...prev,
+        daily_calories: targetCalories,
+        daily_protein_g: proteinG,
+        daily_fat_g: fatG,
+        daily_carbs_g: carbsG,
+      };
+    });
+  }, []);
 
   return (
     <OnboardingContext.Provider

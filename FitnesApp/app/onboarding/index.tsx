@@ -1,115 +1,204 @@
-import { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useOnboarding } from "@/lib/onboarding-context";
-import { CustomButton, CustomInput, Card } from "@/components/atoms";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { ChevronLeft, ChevronRight } from "lucide-react-native";
 
-// ============================================================
-// Step 0: Basic Info (Пол, Вес, Рост)
-// ============================================================
-function StepBasicInfo() {
-  const { settings, setSetting } = useOnboarding();
+import { useOnboarding } from "@/lib/onboarding-context";
+import { Card, CustomButton, CustomInput } from "@/components/atoms";
+import { useAppTheme } from "@/context/theme-context";
+import { FORCE_ONBOARDING_STORAGE_KEY, saveOnboardingSettings } from "@/services/auth";
+
+function StepTitle({ title, subtitle }: { title: string; subtitle?: string }) {
+  const { resolvedTheme } = useAppTheme();
+  const isDark = resolvedTheme === "dark";
 
   return (
-    <View className="gap-5">
-      <View>
-        <Text className="text-center text-3xl font-bold text-gray-900 dark:text-gray-50">
-          Основные данные
-        </Text>
-        <Text className="text-center text-base text-gray-500 dark:text-gray-400 mt-1">
-          Расскажите немного о себе
-        </Text>
-      </View>
+    <View>
+      <Text
+        className={`text-center text-[32px] leading-9 ${isDark ? "text-white" : "text-surface-900"}`}
+        style={{ fontFamily: "Manrope-ExtraBold" }}
+      >
+        {title}
+      </Text>
+      {subtitle ? (
+        <Text className={`mt-2 text-center text-base ${isDark ? "text-dark-300" : "text-dark-400"}`}>{subtitle}</Text>
+      ) : null}
+    </View>
+  );
+}
 
-      {/* Gender */}
-      <View>
-        <Text className="mb-3 text-lg font-bold text-gray-900 dark:text-gray-50">Пол</Text>
-        <View className="flex-row gap-4">
-          <TouchableOpacity
-            onPress={() => setSetting("gender", "male")}
-            className={`flex-1 rounded-2xl border-2 p-4 ${settings.gender === "male"
-              ? "border-primary-500 bg-primary-50 dark:bg-primary-900/10"
-              : "border-gray-100 dark:border-dark-700 bg-white dark:bg-dark-900"
-              }`}
+function OptionCard({
+  selected,
+  title,
+  description,
+  emoji,
+  onPress,
+}: {
+  selected: boolean;
+  title: string;
+  description?: string;
+  emoji?: string;
+  onPress: () => void;
+}) {
+  const { resolvedTheme } = useAppTheme();
+  const isDark = resolvedTheme === "dark";
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.9}
+      className={`rounded-[20px] border p-4 ${
+        selected
+          ? isDark
+            ? "border-primary-500 bg-dark-800"
+            : "border-primary-500 bg-primary-50"
+          : isDark
+            ? "border-white/8 bg-dark-900"
+            : "border-black/8 bg-white"
+      }`}
+    >
+      <View className="flex-row items-center gap-3">
+        {emoji ? (
+          <View className="h-12 w-12 items-center justify-center rounded-2xl bg-primary-600/10">
+            <Text className="text-2xl">{emoji}</Text>
+          </View>
+        ) : null}
+        <View className="flex-1">
+          <Text
+            className={`${selected ? "text-primary-500" : isDark ? "text-white" : "text-surface-900"}`}
+            style={{ fontFamily: selected ? "Manrope-Bold" : "Manrope-Medium", fontSize: 18 }}
           >
-            <Text
-              className={`text-center text-lg ${settings.gender === "male"
-                ? "text-primary-600 dark:text-primary-400 font-bold"
-                : "text-gray-600 dark:text-gray-400"
-                }`}
-            >
-              Мужской
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setSetting("gender", "female")}
-            className={`flex-1 rounded-2xl border-2 p-4 ${settings.gender === "female"
-              ? "border-primary-500 bg-primary-50 dark:bg-primary-900/10"
-              : "border-gray-100 dark:border-dark-700 bg-white dark:bg-dark-900"
-              }`}
-          >
-            <Text
-              className={`text-center text-lg ${settings.gender === "female"
-                ? "text-primary-600 dark:text-primary-400 font-bold"
-                : "text-gray-600 dark:text-gray-400"
-                }`}
-            >
-              Женский
-            </Text>
-          </TouchableOpacity>
+            {title}
+          </Text>
+          {description ? (
+            <Text className={`mt-1 text-sm ${isDark ? "text-dark-300" : "text-dark-400"}`}>{description}</Text>
+          ) : null}
         </View>
       </View>
+    </TouchableOpacity>
+  );
+}
 
-      {/* Height & Weight */}
+function Chip({
+  label,
+  selected,
+  onPress,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const { resolvedTheme } = useAppTheme();
+  const isDark = resolvedTheme === "dark";
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.85}
+      className={`rounded-full border px-5 py-3 ${
+        selected
+          ? "border-primary-500 bg-primary-600"
+          : isDark
+            ? "border-white/8 bg-dark-900"
+            : "border-black/8 bg-white"
+      }`}
+    >
+      <Text
+        className={selected ? "text-white" : isDark ? "text-dark-300" : "text-dark-400"}
+        style={{ fontFamily: "Manrope-Bold" }}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
+function StepBasicInfo() {
+  const { settings, setSetting } = useOnboarding();
+  const [yearText, setYearText] = useState(
+    settings.birth_date ? new Date(settings.birth_date).getFullYear().toString() : ""
+  );
+
+  const handleYearChange = (value: string) => {
+    const next = value.replace(/[^0-9]/g, "");
+    setYearText(next);
+
+    if (!next) {
+      setSetting("birth_date", null);
+      return;
+    }
+
+    if (next.length === 4) {
+      const year = parseInt(next, 10);
+      if (year > 1900 && year <= new Date().getFullYear()) {
+        const date = new Date();
+        date.setFullYear(year, 0, 1);
+        setSetting("birth_date", date.toISOString());
+      } else {
+        setSetting("birth_date", null);
+      }
+    }
+  };
+
+  return (
+    <View className="gap-6">
+      <StepTitle title="Основные данные" subtitle="Расскажите немного о себе." />
+
+      <View className="gap-3">
+        <OptionCard
+          selected={settings.gender === "male"}
+          title="Мужской"
+          emoji="🧍"
+          onPress={() => setSetting("gender", "male")}
+        />
+        <OptionCard
+          selected={settings.gender === "female"}
+          title="Женский"
+          emoji="🧍‍♀️"
+          onPress={() => setSetting("gender", "female")}
+        />
+      </View>
+
       <View className="gap-4">
         <CustomInput
           label="Рост (см)"
           placeholder="175"
           keyboardType="number-pad"
-          value={settings.height_cm?.toString() ?? ""}
-          onChangeText={(v) => setSetting("height_cm", parseInt(v) || 0)}
+          value={settings.height_cm ? String(settings.height_cm) : ""}
+          onChangeText={(value) => setSetting("height_cm", parseInt(value, 10) || null)}
         />
-
         <CustomInput
           label="Вес (кг)"
           placeholder="70"
           keyboardType="decimal-pad"
-          value={settings.weight_kg?.toString() ?? ""}
-          onChangeText={(v) => setSetting("weight_kg", parseFloat(v) || 0)}
+          value={settings.weight_kg ? String(settings.weight_kg) : ""}
+          onChangeText={(value) => setSetting("weight_kg", parseFloat(value.replace(",", ".")) || null)}
         />
-
         <CustomInput
           label="Год рождения"
           placeholder="1995"
           keyboardType="number-pad"
-          value={settings.birth_date ? new Date(settings.birth_date).getFullYear().toString() : ""}
-          onChangeText={(v) => {
-            const year = parseInt(v);
-            if (year > 1900 && year <= new Date().getFullYear()) {
-              const d = new Date();
-              d.setFullYear(year, 0, 1);
-              setSetting("birth_date", d.toISOString());
-            }
-          }}
+          value={yearText}
+          onChangeText={handleYearChange}
+          maxLength={4}
         />
       </View>
     </View>
   );
 }
 
-// ============================================================
-// Step 1: Goal (Цель, Уровень активности)
-// ============================================================
 function StepGoal() {
   const { settings, setSetting } = useOnboarding();
+  const { resolvedTheme } = useAppTheme();
+  const isDark = resolvedTheme === "dark";
 
   const goals = [
     { value: "weight_loss", label: "Похудение", emoji: "🔥" },
     { value: "muscle_gain", label: "Набор массы", emoji: "💪" },
     { value: "maintain", label: "Поддержание формы", emoji: "✨" },
-  ];
+  ] as const;
 
   const activityLevels = [
     { value: "sedentary", label: "Сидячий" },
@@ -117,76 +206,36 @@ function StepGoal() {
     { value: "moderate", label: "Умеренный" },
     { value: "active", label: "Активный" },
     { value: "very_active", label: "Очень активный" },
-  ];
+  ] as const;
 
   return (
     <View className="gap-6">
-      <View>
-        <Text className="text-center text-3xl font-bold text-gray-900 dark:text-gray-50">
-          Ваша цель
-        </Text>
-        <Text className="text-center text-base text-gray-500 dark:text-gray-400 mt-1">
-          Чего вы хотите достичь?
-        </Text>
+      <StepTitle title="Ваша цель" subtitle="Чего вы хотите достичь?" />
+
+      <View className="gap-3">
+        {goals.map((goal) => (
+          <OptionCard
+            key={goal.value}
+            selected={settings.goal === goal.value}
+            title={goal.label}
+            emoji={goal.emoji}
+            onPress={() => setSetting("goal", goal.value)}
+          />
+        ))}
       </View>
 
-      {/* Goals */}
       <View>
-        <Text className="mb-3 text-lg font-bold text-gray-900 dark:text-gray-50">Цель</Text>
-        <View className="gap-3">
-          {goals.map((g) => (
-            <TouchableOpacity
-              key={g.value}
-              onPress={() => setSetting("goal", g.value)}
-              className={`rounded-2xl border-2 p-4 flex-row items-center ${settings.goal === g.value
-                ? "border-primary-500 bg-primary-50 dark:bg-primary-900/10"
-                : "border-gray-100 dark:border-dark-700 bg-white dark:bg-dark-900"
-                }`}
-            >
-              <Text className="text-2xl mr-3">{g.emoji}</Text>
-              <Text
-                className={`text-lg flex-1 ${settings.goal === g.value
-                  ? "font-bold text-primary-600 dark:text-primary-400"
-                  : "text-gray-700 dark:text-gray-300"
-                  }`}
-              >
-                {g.label}
-              </Text>
-              {settings.goal === g.value && (
-                <View className="h-6 w-6 rounded-full bg-primary-500 items-center justify-center">
-                  <ChevronRight size={16} color="white" />
-                </View>
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      {/* Activity level */}
-      <View>
-        <Text className="mb-3 text-lg font-bold text-gray-900 dark:text-gray-50">
+        <Text className={`mb-3 text-lg ${isDark ? "text-white" : "text-surface-900"}`} style={{ fontFamily: "Manrope-Bold" }}>
           Уровень активности
         </Text>
         <View className="flex-row flex-wrap gap-2">
-          {activityLevels.map((al) => (
-            <TouchableOpacity
-              key={al.value}
-              onPress={() => setSetting("activity_level", al.value)}
-              className={`rounded-full px-5 py-2.5 ${settings.activity_level === al.value
-                ? "bg-primary-500 shadow-md shadow-primary-500/20"
-                : "bg-gray-100 dark:bg-dark-800"
-                }`}
-            >
-              <Text
-                className={
-                  settings.activity_level === al.value
-                    ? "font-bold text-white"
-                    : "text-gray-700 dark:text-gray-400"
-                }
-              >
-                {al.label}
-              </Text>
-            </TouchableOpacity>
+          {activityLevels.map((level) => (
+            <Chip
+              key={level.value}
+              label={level.label}
+              selected={settings.activity_level === level.value}
+              onPress={() => setSetting("activity_level", level.value)}
+            />
           ))}
         </View>
       </View>
@@ -194,210 +243,139 @@ function StepGoal() {
   );
 }
 
-// ============================================================
-// Step 2: Fitness Level & Preferences
-// ============================================================
 function StepFitness() {
   const { settings, setSetting } = useOnboarding();
+  const { resolvedTheme } = useAppTheme();
+  const isDark = resolvedTheme === "dark";
 
   const fitnessLevels = [
     { value: "beginner", label: "Новичок", desc: "Только начинаю" },
-    {
-      value: "intermediate",
-      label: "Средний",
-      desc: "Занимаюсь регулярно",
-    },
+    { value: "intermediate", label: "Средний", desc: "Занимаюсь регулярно" },
     { value: "advanced", label: "Продвинутый", desc: "Опыт более 2 лет" },
-  ];
+  ] as const;
 
   const workoutPrefs = [
     { value: "home", label: "Дома", emoji: "🏠" },
     { value: "outdoor", label: "На улице", emoji: "🌳" },
     { value: "gym", label: "В зале", emoji: "🏋️" },
     { value: "mixed", label: "Смешанные", emoji: "🔄" },
-  ];
+  ] as const;
 
   return (
-    <View className="gap-5">
-      <View>
-        <Text className="text-center text-3xl font-bold text-gray-900 dark:text-gray-50">
-          Фитнес уровень
-        </Text>
-      </View>
+    <View className="gap-6">
+      <StepTitle title="Фитнес уровень" subtitle="Подберём нагрузку под ваш текущий ритм." />
 
-      {/* Fitness level */}
       <View className="gap-3">
-        {fitnessLevels.map((fl) => (
-          <TouchableOpacity
-            key={fl.value}
-            onPress={() => setSetting("fitness_level", fl.value)}
-            className={`rounded-2xl border-2 p-4 ${settings.fitness_level === fl.value
-              ? "border-primary-500 bg-primary-50 dark:bg-primary-900/10"
-              : "border-gray-100 dark:border-dark-700 bg-white dark:bg-dark-900"
-              }`}
-          >
-            <Text
-              className={`text-lg ${settings.fitness_level === fl.value
-                ? "font-bold text-primary-600 dark:text-primary-400"
-                : "text-gray-700 dark:text-gray-300"
-                }`}
-            >
-              {fl.label}
-            </Text>
-            <Text className="text-sm text-gray-500 dark:text-gray-400">{fl.desc}</Text>
-          </TouchableOpacity>
+        {fitnessLevels.map((level) => (
+          <OptionCard
+            key={level.value}
+            selected={settings.fitness_level === level.value}
+            title={level.label}
+            description={level.desc}
+            onPress={() => setSetting("fitness_level", level.value)}
+          />
         ))}
       </View>
 
-      {/* Workout preference */}
       <View>
-        <Text className="mb-3 text-lg font-bold text-gray-900 dark:text-gray-50">
+        <Text className={`mb-3 text-lg ${isDark ? "text-white" : "text-surface-900"}`} style={{ fontFamily: "Manrope-Bold" }}>
           Где будете тренироваться?
         </Text>
-        <View className="flex-row flex-wrap gap-2">
-          {workoutPrefs.map((wp) => (
-            <TouchableOpacity
-              key={wp.value}
-              onPress={() => setSetting("workout_preference", wp.value)}
-              className={`rounded-xl px-4 py-3 ${settings.workout_preference === wp.value
-                ? "bg-primary-500 shadow-md shadow-primary-500/20"
-                : "bg-gray-100 dark:bg-dark-800"
-                }`}
-            >
-              <Text
-                className={
-                  settings.workout_preference === wp.value
-                    ? "font-bold text-white"
-                    : "text-gray-700 dark:text-gray-400"
-                }
-              >
-                {wp.emoji} {wp.label}
-              </Text>
-            </TouchableOpacity>
+        <View className="gap-3">
+          {workoutPrefs.map((pref) => (
+            <OptionCard
+              key={pref.value}
+              selected={settings.workout_preference === pref.value}
+              title={pref.label}
+              emoji={pref.emoji}
+              onPress={() => setSetting("workout_preference", pref.value)}
+            />
           ))}
         </View>
       </View>
 
-      {/* Inputs */}
       <View className="gap-4">
         <CustomInput
           label="Тренировок в неделю"
           placeholder="3"
           keyboardType="number-pad"
-          value={settings.workouts_per_week?.toString() ?? ""}
-          onChangeText={(v) =>
-            setSetting("workouts_per_week", parseInt(v) || 3)
-          }
+          value={settings.workouts_per_week ? String(settings.workouts_per_week) : ""}
+          onChangeText={(value) => setSetting("workouts_per_week", parseInt(value, 10) || null)}
         />
-
         <CustomInput
           label="Длительность (мин)"
           placeholder="45"
           keyboardType="number-pad"
-          value={settings.workout_duration_min?.toString() ?? ""}
-          onChangeText={(v) =>
-            setSetting("workout_duration_min", parseInt(v) || 45)
-          }
+          value={settings.workout_duration_min ? String(settings.workout_duration_min) : ""}
+          onChangeText={(value) => setSetting("workout_duration_min", parseInt(value, 10) || null)}
         />
       </View>
     </View>
   );
 }
 
-// ============================================================
-// Step 3: Health
-// ============================================================
 function StepHealth() {
   const { settings, setSetting } = useOnboarding();
+  const { resolvedTheme } = useAppTheme();
+  const isDark = resolvedTheme === "dark";
 
   const sleepOptions = [
     { value: "poor", label: "Плохой" },
     { value: "fair", label: "Средний" },
     { value: "good", label: "Хороший" },
     { value: "excellent", label: "Отличный" },
-  ];
+  ] as const;
 
   const stressOptions = [
     { value: "low", label: "Низкий" },
     { value: "moderate", label: "Средний" },
     { value: "high", label: "Высокий" },
-  ];
+  ] as const;
 
   return (
     <View className="gap-6">
-      <View>
-        <Text className="text-center text-3xl font-bold text-gray-900 dark:text-gray-50">
-          Здоровье
-        </Text>
-      </View>
+      <StepTitle title="Здоровье" subtitle="Учитываем сон, стресс и ограничения." />
 
-      {/* Sleep quality */}
       <View>
-        <Text className="mb-3 text-lg font-bold text-gray-900 dark:text-gray-50">
+        <Text className={`mb-3 text-lg ${isDark ? "text-white" : "text-surface-900"}`} style={{ fontFamily: "Manrope-Bold" }}>
           Качество сна
         </Text>
         <View className="flex-row flex-wrap gap-2">
-          {sleepOptions.map((s) => (
-            <TouchableOpacity
-              key={s.value}
-              onPress={() => setSetting("sleep_quality", s.value)}
-              className={`rounded-full px-5 py-2.5 ${settings.sleep_quality === s.value
-                ? "bg-primary-500 shadow-md shadow-primary-500/20"
-                : "bg-gray-100 dark:bg-dark-800"
-                }`}
-            >
-              <Text
-                className={
-                  settings.sleep_quality === s.value
-                    ? "text-white font-bold"
-                    : "text-gray-700 dark:text-gray-400"
-                }
-              >
-                {s.label}
-              </Text>
-            </TouchableOpacity>
+          {sleepOptions.map((option) => (
+            <Chip
+              key={option.value}
+              label={option.label}
+              selected={settings.sleep_quality === option.value}
+              onPress={() => setSetting("sleep_quality", option.value)}
+            />
           ))}
         </View>
       </View>
 
-      {/* Stress level */}
       <View>
-        <Text className="mb-3 text-lg font-bold text-gray-900 dark:text-gray-50">
+        <Text className={`mb-3 text-lg ${isDark ? "text-white" : "text-surface-900"}`} style={{ fontFamily: "Manrope-Bold" }}>
           Уровень стресса
         </Text>
         <View className="flex-row flex-wrap gap-2">
-          {stressOptions.map((s) => (
-            <TouchableOpacity
-              key={s.value}
-              onPress={() => setSetting("stress_level", s.value)}
-              className={`rounded-full px-5 py-2.5 ${settings.stress_level === s.value
-                ? "bg-primary-500 shadow-md shadow-primary-500/20"
-                : "bg-gray-100 dark:bg-dark-800"
-                }`}
-            >
-              <Text
-                className={
-                  settings.stress_level === s.value
-                    ? "text-white font-bold"
-                    : "text-gray-700 dark:text-gray-400"
-                }
-              >
-                {s.label}
-              </Text>
-            </TouchableOpacity>
+          {stressOptions.map((option) => (
+            <Chip
+              key={option.value}
+              label={option.label}
+              selected={settings.stress_level === option.value}
+              onPress={() => setSetting("stress_level", option.value)}
+            />
           ))}
         </View>
       </View>
 
-      {/* Health restrictions */}
       <CustomInput
         label="Медицинские ограничения"
         placeholder="Грыжа, астма или нет"
         value={(settings.health_restrictions ?? []).join(", ")}
-        onChangeText={(v) =>
+        onChangeText={(value) =>
           setSetting(
             "health_restrictions",
-            v.split(",").map((s) => s.trim()).filter(Boolean)
+            value.split(",").map((item) => item.trim()).filter(Boolean)
           )
         }
       />
@@ -405,188 +383,198 @@ function StepHealth() {
   );
 }
 
-// ============================================================
-// Step 4: Nutrition
-// ============================================================
 function StepNutrition() {
   const { settings, setSetting } = useOnboarding();
+  const { resolvedTheme } = useAppTheme();
+  const isDark = resolvedTheme === "dark";
+  const [mealsText, setMealsText] = useState(settings.meals_per_day?.toString() ?? "");
+  const [waterGoalText, setWaterGoalText] = useState(settings.water_intake_goal_ml?.toString() ?? "");
+
+  const handleMealsChange = (value: string) => {
+    const next = value.replace(/[^0-9]/g, "");
+    setMealsText(next);
+    setSetting("meals_per_day", next ? parseInt(next, 10) : null);
+  };
+
+  const handleWaterGoalChange = (value: string) => {
+    const next = value.replace(/[^0-9]/g, "");
+    setWaterGoalText(next);
+    setSetting("water_intake_goal_ml", next ? parseInt(next, 10) : null);
+  };
+
+  const diets = useMemo(
+    () => [
+      { value: "standard", label: "Обычное" },
+      { value: "vegetarian", label: "Вегетарианство" },
+      { value: "vegan", label: "Веганство" },
+      { value: "keto", label: "Кето" },
+      { value: "paleo", label: "Палео" },
+      { value: "mediterranean", label: "Средиземноморское" },
+    ],
+    []
+  );
 
   return (
     <View className="gap-6">
-      <View>
-        <Text className="text-center text-3xl font-bold text-gray-900 dark:text-gray-50">
-          Питание
-        </Text>
-      </View>
+      <StepTitle title="Питание" subtitle="Зададим базовые ориентиры по рациону." />
 
       <View className="gap-4">
-        {/* Meals per day */}
         <CustomInput
           label="Приёмов пищи в день"
           placeholder="3"
           keyboardType="number-pad"
-          value={settings.meals_per_day?.toString() ?? ""}
-          onChangeText={(v) => setSetting("meals_per_day", parseInt(v) || 3)}
+          value={mealsText}
+          onChangeText={handleMealsChange}
         />
-
-        {/* Water intake goal */}
         <CustomInput
           label="Цель по воде (мл в день)"
           placeholder="2000"
           keyboardType="number-pad"
-          value={settings.water_intake_goal_ml?.toString() ?? ""}
-          onChangeText={(v) =>
-            setSetting("water_intake_goal_ml", parseInt(v) || 2000)
-          }
+          value={waterGoalText}
+          onChangeText={handleWaterGoalChange}
         />
       </View>
 
-      {/* Dietary preferences */}
       <View>
-        <Text className="mb-3 text-lg font-bold text-gray-900 dark:text-gray-50">
+        <Text className={`mb-3 text-lg ${isDark ? "text-white" : "text-surface-900"}`} style={{ fontFamily: "Manrope-Bold" }}>
           Принципы питания
         </Text>
         <View className="flex-row flex-wrap gap-2">
-          {[
-            "standard",
-            "vegetarian",
-            "vegan",
-            "keto",
-            "paleo",
-            "mediterranean",
-          ].map((pref) => {
-            const labels: Record<string, string> = {
-              standard: "Обычное",
-              vegetarian: "Вегетарианство",
-              vegan: "Веганство",
-              keto: "Кето",
-              paleo: "Палео",
-              mediterranean: "Средиземноморское",
-            };
-            const isSelected = (settings.dietary_preferences ?? []).includes(
-              pref
-            );
+          {diets.map((diet) => {
+            const selected = (settings.dietary_preferences ?? []).includes(diet.value);
             return (
-              <TouchableOpacity
-                key={pref}
+              <Chip
+                key={diet.value}
+                label={diet.label}
+                selected={selected}
                 onPress={() => {
                   const current = settings.dietary_preferences ?? [];
-                  const updated = isSelected
-                    ? current.filter((p) => p !== pref)
-                    : [...current, pref];
-                  setSetting("dietary_preferences", updated);
+                  const next = selected
+                    ? current.filter((item) => item !== diet.value)
+                    : [...current, diet.value];
+                  setSetting("dietary_preferences", next);
                 }}
-                className={`rounded-full px-5 py-2.5 ${isSelected ? "bg-accent-500 shadow-md shadow-accent-500/20" : "bg-gray-100 dark:bg-dark-800"
-                  }`}
-              >
-                <Text
-                  className={
-                    isSelected ? "text-white font-bold" : "text-gray-700 dark:text-gray-400"
-                  }
-                >
-                  {labels[pref]}
-                </Text>
-              </TouchableOpacity>
+              />
             );
           })}
         </View>
       </View>
 
-      {/* Allergies */}
       <CustomInput
         label="Аллергии"
         placeholder="Орехи, молоко или нет"
         value={(settings.allergies ?? []).join(", ")}
-        onChangeText={(v) =>
-          setSetting(
-            "allergies",
-            v.split(",").map((s) => s.trim()).filter(Boolean)
-          )
+        onChangeText={(value) =>
+          setSetting("allergies", value.split(",").map((item) => item.trim()).filter(Boolean))
         }
       />
     </View>
   );
 }
 
-// ============================================================
-// Step 5: Summary & Confirm
-// ============================================================
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  const { resolvedTheme } = useAppTheme();
+  const isDark = resolvedTheme === "dark";
+
+  return (
+    <View className={`flex-row items-center justify-between border-b py-3 last:border-b-0 ${isDark ? "border-white/8" : "border-black/6"}`}>
+      <Text className={`text-sm ${isDark ? "text-dark-300" : "text-dark-400"}`}>{label}</Text>
+      <Text className={`text-sm ${isDark ? "text-white" : "text-surface-900"}`} style={{ fontFamily: "Manrope-Bold" }}>
+        {value}
+      </Text>
+    </View>
+  );
+}
+
 function StepSummary() {
   const { settings, calculateBMI, calculateDailyCalories } = useOnboarding();
+  const { resolvedTheme } = useAppTheme();
+  const isDark = resolvedTheme === "dark";
 
-  // Auto-calculate on mount or when key data changes
   useEffect(() => {
     calculateBMI();
     calculateDailyCalories();
-  }, [settings.height_cm, settings.weight_kg, settings.gender, settings.activity_level, settings.goal, settings.birth_date]);
+  }, [
+    calculateBMI,
+    calculateDailyCalories,
+    settings.activity_level,
+    settings.birth_date,
+    settings.gender,
+    settings.goal,
+    settings.height_cm,
+    settings.weight_kg,
+  ]);
 
   return (
     <View className="gap-6">
-      <View>
-        <Text className="text-center text-3xl font-bold text-gray-900 dark:text-gray-50">
-          Ваш профиль готов! 🎉
-        </Text>
-        <Text className="text-center text-base text-gray-500 dark:text-gray-400 mt-1">
-          Проверьте данные и подтвердите
-        </Text>
-      </View>
+      <StepTitle title="Профиль готов" subtitle="Проверьте данные и подтвердите расчёты." />
 
-      <Card variant="elevated" padding="md">
-        <View className="gap-3">
-          <SummaryRow
-            label="Ваш ИМТ"
-            value={settings.bmi?.toFixed(1) ?? "—"}
-          />
+      <Card variant="elevated" padding="lg" className={isDark ? "bg-dark-900" : "bg-white"}>
+        <View className="gap-2">
+          <SummaryRow label="Ваш ИМТ" value={settings.bmi?.toFixed(1) ?? "—"} />
           <SummaryRow
             label="Дневная норма калорий"
             value={`${settings.daily_calories?.toString() ?? "—"} ккал`}
-            highlight
           />
-          <View className="flex-row gap-3 mt-1">
-            <View className="flex-1 bg-gray-50 dark:bg-dark-800 p-3 rounded-xl items-center border border-gray-100 dark:border-dark-700">
-              <Text className="text-[10px] uppercase font-bold text-gray-400 mb-1">Белки</Text>
-              <Text className="font-bold text-gray-900 dark:text-gray-50">{settings.daily_protein_g}г</Text>
-            </View>
-            <View className="flex-1 bg-gray-50 dark:bg-dark-800 p-3 rounded-xl items-center border border-gray-100 dark:border-dark-700">
-              <Text className="text-[10px] uppercase font-bold text-gray-400 mb-1">Жиры</Text>
-              <Text className="font-bold text-gray-900 dark:text-gray-50">{settings.daily_fat_g}г</Text>
-            </View>
-            <View className="flex-1 bg-gray-50 dark:bg-dark-800 p-3 rounded-xl items-center border border-gray-100 dark:border-dark-700">
-              <Text className="text-[10px] uppercase font-bold text-gray-400 mb-1">Углеводы</Text>
-              <Text className="font-bold text-gray-900 dark:text-gray-50">{settings.daily_carbs_g}г</Text>
-            </View>
+        </View>
+
+        <View className="mt-5 flex-row gap-3">
+          <View className={`flex-1 items-center rounded-2xl p-3 ${isDark ? "bg-dark-800" : "bg-surface-50"}`}>
+            <Text className={`text-[10px] uppercase tracking-[1px] ${isDark ? "text-dark-300" : "text-dark-400"}`}>Белки</Text>
+            <Text className={`mt-1 text-lg ${isDark ? "text-white" : "text-surface-900"}`} style={{ fontFamily: "Manrope-ExtraBold" }}>
+              {settings.daily_protein_g ?? "—"}г
+            </Text>
+          </View>
+          <View className={`flex-1 items-center rounded-2xl p-3 ${isDark ? "bg-dark-800" : "bg-surface-50"}`}>
+            <Text className={`text-[10px] uppercase tracking-[1px] ${isDark ? "text-dark-300" : "text-dark-400"}`}>Жиры</Text>
+            <Text className={`mt-1 text-lg ${isDark ? "text-white" : "text-surface-900"}`} style={{ fontFamily: "Manrope-ExtraBold" }}>
+              {settings.daily_fat_g ?? "—"}г
+            </Text>
+          </View>
+          <View className={`flex-1 items-center rounded-2xl p-3 ${isDark ? "bg-dark-800" : "bg-surface-50"}`}>
+            <Text className={`text-[10px] uppercase tracking-[1px] ${isDark ? "text-dark-300" : "text-dark-400"}`}>Углеводы</Text>
+            <Text className={`mt-1 text-lg ${isDark ? "text-white" : "text-surface-900"}`} style={{ fontFamily: "Manrope-ExtraBold" }}>
+              {settings.daily_carbs_g ?? "—"}г
+            </Text>
           </View>
         </View>
       </Card>
 
-      <Card variant="outlined" padding="md" className="border-gray-100 dark:border-dark-800">
-        <Text className="mb-4 text-sm font-bold text-gray-900 dark:text-gray-50 uppercase tracking-widest">
+      <Card variant="outlined" padding="lg">
+        <Text className={`mb-4 text-sm uppercase tracking-[2px] ${isDark ? "text-dark-300" : "text-dark-400"}`} style={{ fontFamily: "Manrope-Bold" }}>
           Сводка данных
         </Text>
         <View className="gap-2">
-          <SummaryText
+          <SummaryRow
             label="Пол"
-            value={settings.gender === "male" ? "Мужской" : "Женский"}
+            value={settings.gender === "male" ? "Мужской" : settings.gender === "female" ? "Женский" : "—"}
           />
-          <SummaryText label="Рост / Вес" value={`${settings.height_cm} см / ${settings.weight_kg} кг`} />
-          <SummaryText
+          <SummaryRow
+            label="Рост / Вес"
+            value={`${settings.height_cm ?? "—"} см / ${settings.weight_kg ?? "—"} кг`}
+          />
+          <SummaryRow
             label="Цель"
             value={
               settings.goal === "weight_loss"
                 ? "Похудение"
                 : settings.goal === "muscle_gain"
                   ? "Набор массы"
-                  : "Поддержание"
+                  : settings.goal === "maintain"
+                    ? "Поддержание"
+                    : "—"
             }
           />
-          <SummaryText
+          <SummaryRow
             label="Уровень"
             value={
               settings.fitness_level === "beginner"
                 ? "Новичок"
                 : settings.fitness_level === "intermediate"
                   ? "Средний"
-                  : "Продвинутый"
+                  : settings.fitness_level === "advanced"
+                    ? "Продвинутый"
+                    : "—"
             }
           />
         </View>
@@ -595,40 +583,6 @@ function StepSummary() {
   );
 }
 
-function SummaryRow({
-  label,
-  value,
-  highlight = false,
-}: {
-  label: string;
-  value: string;
-  highlight?: boolean;
-}) {
-  return (
-    <View className="flex-row justify-between border-b border-gray-100 dark:border-dark-800 py-3 last:border-0 text-gray-900 dark:text-gray-50">
-      <Text className="text-gray-500 dark:text-gray-400 font-medium">{label}</Text>
-      <Text className={`font-bold ${highlight ? 'text-primary-600 dark:text-primary-400 text-lg' : 'text-gray-900 dark:text-gray-50'}`}>{value}</Text>
-    </View>
-  );
-}
-
-function SummaryText({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <Text className="text-sm text-gray-600 dark:text-gray-400">
-      <Text className="font-bold text-gray-900 dark:text-gray-300">{label}:</Text> {value}
-    </Text>
-  );
-}
-
-// ============================================================
-// Main Onboarding Screen with Steps Navigation
-// ============================================================
 const stepComponents = [
   StepBasicInfo,
   StepGoal,
@@ -639,63 +593,90 @@ const stepComponents = [
 ];
 
 export default function OnboardingScreen() {
-  const { currentStep, totalSteps, nextStep, prevStep } =
-    useOnboarding();
+  const { currentStep, totalSteps, nextStep, prevStep, settings } = useOnboarding();
+  const { resolvedTheme } = useAppTheme();
+  const isDark = resolvedTheme === "dark";
   const router = useRouter();
+  const [saving, setSaving] = useState(false);
   const StepComponent = stepComponents[currentStep];
+  const progress = useSharedValue((currentStep + 1) / totalSteps);
+
+  useEffect(() => {
+    progress.value = withTiming((currentStep + 1) / totalSteps, { duration: 350 });
+  }, [currentStep, progress, totalSteps]);
+
+  const progressStyle = useAnimatedStyle(() => ({
+    width: `${progress.value * 100}%`,
+  }));
 
   const handleNext = async () => {
     if (currentStep === totalSteps - 1) {
-      // Final step — complete onboarding
-      await AsyncStorage.setItem("fitnes_onboarding_completed", "true");
-      router.replace("/(tabs)");
-    } else {
-      nextStep();
+      setSaving(true);
+      try {
+        await saveOnboardingSettings({
+          ...settings,
+          onboarding_step: totalSteps - 1,
+        });
+        await AsyncStorage.removeItem(FORCE_ONBOARDING_STORAGE_KEY);
+        await AsyncStorage.setItem("fitnes_onboarding_completed", "true");
+        router.replace("/(tabs)");
+      } catch (error) {
+        console.warn("Failed to save onboarding settings:", error);
+        Alert.alert(
+          "Ошибка сохранения",
+          "Не удалось сохранить результаты онбординга. Проверьте соединение и попробуйте ещё раз."
+        );
+      } finally {
+        setSaving(false);
+      }
+      return;
     }
+
+    nextStep();
   };
 
   return (
-    <View className="flex-1 bg-gray-50 dark:bg-dark-950">
-      <ScrollView className="flex-1 px-6 pt-16">
-        {/* Progress bar */}
-        <View className="mb-8 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-dark-800">
-          <View
-            className="h-full rounded-full bg-primary-500"
-            style={{
-              width: `${((currentStep + 1) / totalSteps) * 100}%`,
-            }}
-          />
+    <KeyboardAvoidingView
+      className={`flex-1 ${isDark ? "bg-dark-950" : "bg-surface-50"}`}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView
+        className="flex-1 px-6 pt-14"
+        contentContainerClassName="pb-10"
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+      >
+        <View className="mb-8">
+          <View className={`mb-3 h-[3px] overflow-hidden rounded-full ${isDark ? "bg-dark-800" : "bg-surface-200"}`}>
+            <Animated.View className="h-full rounded-full bg-primary-500" style={progressStyle} />
+          </View>
+          <Text className="text-center text-sm uppercase tracking-[2px] text-primary-400" style={{ fontFamily: "Manrope-Bold" }}>
+            Шаг {currentStep + 1} из {totalSteps}
+          </Text>
         </View>
 
-        {/* Step indicator */}
-        <Text className="mb-6 text-center text-sm font-bold text-primary-600 dark:text-primary-400 uppercase tracking-widest">
-          Шаг {currentStep + 1} из {totalSteps}
-        </Text>
-
-        {/* Step content */}
         <StepComponent />
 
-        {/* Navigation buttons */}
-        <View className="mb-12 mt-10 gap-3">
+        <View className="mt-10 gap-3">
           <CustomButton
             title={currentStep === totalSteps - 1 ? "Готово" : "Продолжить"}
             onPress={handleNext}
             variant="primary"
             size="lg"
-            className="shadow-lg shadow-primary-500/20"
-            icon={<ChevronRight size={20} color="#FFFFFF" />}
+            isLoading={saving}
+            icon={saving ? undefined : <ChevronRight size={18} color="#FFFFFF" />}
           />
-          {currentStep > 0 && (
+          {currentStep > 0 ? (
             <CustomButton
               title="Вернуться назад"
               onPress={prevStep}
               variant="ghost"
               size="lg"
-              icon={<ChevronLeft size={20} color="#7C3AED" />}
+              icon={<ChevronLeft size={18} color="#2B8EF0" />}
             />
-          )}
+          ) : null}
         </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
