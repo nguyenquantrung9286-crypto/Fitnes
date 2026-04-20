@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
@@ -636,10 +636,7 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      className={`flex-1 ${isDark ? "bg-dark-950" : "bg-surface-50"}`}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <View className={`flex-1 ${isDark ? "bg-dark-950" : "bg-surface-50"}`}>
       <ScrollView
         className="flex-1 px-6 pt-14"
         contentContainerClassName="pb-10"
@@ -677,6 +674,6 @@ export default function OnboardingScreen() {
           ) : null}
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }

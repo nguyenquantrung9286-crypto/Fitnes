@@ -43,14 +43,21 @@ function formatActivity(activity: string | null | undefined) {
 
 function StatTile({ label, value }: { label: string; value: string }) {
   return (
-    <Card variant="elevated" padding="md" className="flex-1">
-      <Text className="text-xs uppercase tracking-[1.6px] text-dark-400 dark:text-dark-300">{label}</Text>
+    // minWidth: 0 обязателен: без него flex-1 не сжимает контент,
+    // и adjustsFontSizeToFit не может уменьшить шрифт — он просто растягивает плитку
+    <Card variant="elevated" padding="md" className="flex-1" style={{ minWidth: 0 }}>
       <Text
-        className="mt-2 text-xl text-surface-900 dark:text-white"
-        style={{ fontFamily: "Manrope-ExtraBold" }}
+        className="text-xs uppercase tracking-[1.6px] text-dark-400 dark:text-dark-300"
+        numberOfLines={1}
+      >
+        {label}
+      </Text>
+      <Text
+        className="mt-2 text-surface-900 dark:text-white"
+        style={{ fontFamily: "Manrope-ExtraBold", fontSize: 20 }}
         numberOfLines={1}
         adjustsFontSizeToFit
-        minimumFontScale={0.65}
+        minimumFontScale={0.55}
       >
         {value}
       </Text>

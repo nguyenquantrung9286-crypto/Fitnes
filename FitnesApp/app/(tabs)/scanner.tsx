@@ -431,7 +431,7 @@ export default function ScannerScreen() {
 
   return (
     <View className="flex-1 bg-black">
-      <CameraView style={StyleSheet.absoluteFill} ref={cameraRef} facing="back" zoom={0} />
+      <CameraView style={StyleSheet.absoluteFill} ref={cameraRef} facing="back" />
       <View className="flex-1 justify-between p-6">
         <View className="flex-row justify-between pt-10">
           <View className="rounded-full bg-black/40 px-4 py-2">
