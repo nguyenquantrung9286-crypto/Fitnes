@@ -9,3 +9,4 @@ export { default as ProgressStatusBadge } from "./ProgressStatusBadge";
 export { default as HomeProgressSection } from "./HomeProgressSection";
 export { FlameIcon, SneakerIcon, WaterDropIcon } from "./Icons";
 export { default as PointsWidget } from "./PointsWidget";
+export { default as WorkoutProgressChart } from "./WorkoutProgressChart";
