@@ -7,7 +7,6 @@ import {
   Manrope_600SemiBold,
   Manrope_700Bold,
   Manrope_800ExtraBold,
-  Manrope_900Black,
 } from "@expo-google-fonts/manrope";
 import * as SplashScreen from "expo-splash-screen";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -20,7 +19,8 @@ import { OnboardingProvider } from "@/lib/onboarding-context";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthProvider } from "@/context/auth-context";
 import { ThemeProvider, useAppTheme } from "@/context/theme-context";
-import { isOnboardingCompleted } from "@/services/auth";
+import { FORCE_ONBOARDING_STORAGE_KEY, isOnboardingCompleted } from "@/services/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -31,7 +31,7 @@ export default function RootLayout() {
     "Manrope-SemiBold":  Manrope_600SemiBold,
     "Manrope-Bold":      Manrope_700Bold,
     "Manrope-ExtraBold": Manrope_800ExtraBold,
-    "Manrope-Black":     Manrope_900Black,
+    "Manrope-Black":     Manrope_800ExtraBold,
   });
 
   useEffect(() => {
@@ -108,6 +108,34 @@ function StackScreen() {
         }}
       />
       <Stack.Screen
+        name="paywall"
+        options={{
+          headerShown: false,
+          presentation: "modal",
+        }}
+      />
+      <Stack.Screen
+        name="water/add"
+        options={{
+          headerShown: false,
+          presentation: "modal",
+        }}
+      />
+      <Stack.Screen
+        name="nutrition/add"
+        options={{
+          headerShown: false,
+          presentation: "modal",
+        }}
+      />
+      <Stack.Screen
+        name="points/index"
+        options={{
+          headerShown: false,
+          presentation: "modal",
+        }}
+      />
+      <Stack.Screen
         name="workouts/[id]"
         options={{
           headerShown: false,
@@ -159,8 +187,11 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       }
 
       let completed = false;
+      let forceOnboarding = false;
       try {
         completed = await isOnboardingCompleted();
+        forceOnboarding =
+          (await AsyncStorage.getItem(FORCE_ONBOARDING_STORAGE_KEY)) === "true";
       } catch (error) {
         console.warn("Failed to load onboarding state:", error);
       }
@@ -172,9 +203,9 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
         inWelcome ||
         isRoot ||
         (inTabs && !completed) ||
-        (inOnboarding && completed)
+        (inOnboarding && completed && !forceOnboarding)
       ) {
-        router.replace(completed ? "/(tabs)" : "/onboarding");
+        router.replace(completed && !forceOnboarding ? "/(tabs)" : "/onboarding");
         return;
       }
 

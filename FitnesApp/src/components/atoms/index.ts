@@ -1,3 +1,11 @@
 export { default as CustomButton } from "./CustomButton";
 export { default as CustomInput } from "./CustomInput";
 export { default as Card } from "./Card";
+export { default as MetricTile } from "./MetricTile";
+export { default as DifficultyBadge } from "./DifficultyBadge";
+export { default as PaywallBanner } from "./PaywallBanner";
+export { default as ProgressRing } from "./ProgressRing";
+export { default as ProgressStatusBadge } from "./ProgressStatusBadge";
+export { default as HomeProgressSection } from "./HomeProgressSection";
+export { FlameIcon, SneakerIcon, WaterDropIcon } from "./Icons";
+export { default as PointsWidget } from "./PointsWidget";
