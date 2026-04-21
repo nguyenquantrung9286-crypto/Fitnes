@@ -136,6 +136,13 @@ function StackScreen() {
         }}
       />
       <Stack.Screen
+        name="weight/add"
+        options={{
+          headerShown: false,
+          presentation: "modal",
+        }}
+      />
+      <Stack.Screen
         name="workouts/[id]"
         options={{
           headerShown: false,
