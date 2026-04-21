@@ -11,3 +11,5 @@ export { FlameIcon, SneakerIcon, WaterDropIcon } from "./Icons";
 export { default as PointsWidget } from "./PointsWidget";
 export { default as WorkoutProgressChart } from "./WorkoutProgressChart";
 export { default as WeightChart } from "./WeightChart";
+export { default as NutritionChartPlaceholder } from "./NutritionChartPlaceholder";
+export { default as HomeProgressCharts } from "./HomeProgressCharts";
