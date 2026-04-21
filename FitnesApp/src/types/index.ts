@@ -95,6 +95,14 @@ export interface NutritionLog {
   created_at: string;
 }
 
+export interface WaterLog {
+  id: string;
+  user_id: string;
+  amount_ml: number;
+  logged_at: string;
+  created_at: string;
+}
+
 export interface ProgressEntry {
   id: string;
   user_id: string;
@@ -126,4 +134,30 @@ export interface FoodAnalysisResult {
   carbs_g: number;
   portion_size: string;
   photo_url?: string;
+}
+
+export interface WorkoutLog {
+  id: string;
+  user_id: string;
+  workout_id: string;
+  difficulty_level: string | null;
+  completed_at: string;
+  created_at: string;
+}
+
+export interface PointsLog {
+  id: string;
+  user_id: string;
+  amount: number;
+  reason: string;
+  workout_log_id: string | null;
+  created_at: string;
+}
+
+export interface WeightLog {
+  id: string;
+  user_id: string;
+  value_kg: number;
+  measured_at: string;
+  created_at: string;
 }
