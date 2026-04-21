@@ -42,8 +42,8 @@ function PointsItem({ item }: { item: PointsLog }) {
 
 export default function PointsHistoryScreen() {
   const router = useRouter();
-  const { data: balance = 0 } = usePointsBalance();
-  const { data: history = [] } = usePointsHistory();
+  const { data: balance = 0, isLoading: isBalanceLoading } = usePointsBalance();
+  const { data: history = [], isLoading: isHistoryLoading } = usePointsHistory();
 
   return (
     <SafeAreaView className="flex-1 bg-surface-50 dark:bg-dark-950">
@@ -72,13 +72,17 @@ export default function PointsHistoryScreen() {
               className="text-5xl text-surface-900 dark:text-white"
               style={{ fontFamily: "Manrope-ExtraBold" }}
             >
-              {balance.toLocaleString("ru-RU")}
+              {isBalanceLoading ? "..." : balance.toLocaleString("ru-RU")}
             </Text>
             <Text className="text-sm text-dark-400 dark:text-dark-300">баллов</Text>
           </View>
         </Card>
 
-        {history.length === 0 ? (
+        {isHistoryLoading ? (
+          <Text className="mt-10 text-center text-sm text-dark-400 dark:text-dark-300">
+            Загрузка...
+          </Text>
+        ) : history.length === 0 ? (
           <Text className="mt-10 text-center text-sm text-dark-400 dark:text-dark-300">
             Пока нет начислений. Завершите первую тренировку!
           </Text>
