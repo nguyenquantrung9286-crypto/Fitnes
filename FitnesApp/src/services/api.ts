@@ -155,12 +155,13 @@ export function useCompleteWorkout() {
         .single();
       if (error) throw error;
 
-      await supabase.from("workout_logs").insert({
+      const { error: logError } = await supabase.from("workout_logs").insert({
         user_id: user.id,
         workout_id: id,
         difficulty_level: data.difficulty_level ?? null,
         completed_at: data.completed_at,
       });
+      if (logError) throw logError;
 
       return data;
     },
